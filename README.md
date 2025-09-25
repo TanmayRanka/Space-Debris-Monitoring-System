@@ -1,27 +1,49 @@
-# 🌌 OrbitOPS - Space Debris Monitoring & Prediction Dashboard
+# 🛰️ OrbitOPS - Space Debris Monitoring & Prediction Dashboard
 
-A futuristic fullstack web application for monitoring, analyzing, and predicting space debris and rocket interactions.
+[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
+[![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
+[![Three.js](https://img.shields.io/badge/Three.js-0.158.0-orange.svg)](https://threejs.org/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.3.5-cyan.svg)](https://tailwindcss.com/)
+[![CesiumJS](https://img.shields.io/badge/CesiumJS-1.111.0-purple.svg)](https://cesium.com/)
 
-## 🚀 Features
+> **Advanced Space Debris Monitoring & Prediction Dashboard with Hyperrealistic 3D Visualization**
 
-- **Real-time Space Debris Tracking** - Monitor 14,526+ tracked objects
-- **3D Visualization** - Interactive Cesium globe with orbit trajectories
+A cutting-edge space debris monitoring and prediction system featuring an immersive 3D visualization dashboard. Built for hackathons and real-world applications, it provides real-time tracking of space debris, satellites, and orbital predictions with stunning visual effects.
+
+## ✨ Key Features
+
+### 🌍 **Hyperrealistic 3D Visualization**
+- **Glowing Sun**: Dynamic solar activity with corona effects and lens flares
+- **Photorealistic Earth**: PBR materials with detailed surface textures
+- **Advanced Atmosphere**: Real-time scattering with day/night transitions
+- **Water Reflections**: Specular and roughness mapping for realistic oceans
+- **Time-Synchronized Animation**: All celestial bodies move in real-time
+
+### 🛰️ **Space Debris Tracking**
+- **Real-time Monitoring** - Track 14,526+ space objects from CelesTrak
+- **Interactive 3D Globe** - Cesium-powered visualization with orbit trajectories
 - **Collision Prediction** - AI-powered risk assessment and alerts
 - **Mission Simulation** - Launch planning and orbit analysis
 - **Professional Dashboard** - Futuristic neon UI with dark/light themes
 
-## 🛠️ Tech Stack
+## 🚀 Technology Stack
 
-### Frontend
-- **React 18** - Modern component-based architecture
-- **TailwindCSS** - Utility-first styling with custom neon theme
-- **CesiumJS** - 3D globe and satellite visualization
+### **Frontend**
+- **React 18.2.0** - Modern UI framework with hooks and context
+- **Three.js 0.158.0** - Advanced 3D graphics and hyperrealistic visualization
+- **TailwindCSS 3.3.5** - Utility-first styling with custom neon theme
+- **CesiumJS 1.111.0** - Geospatial 3D mapping and satellite visualization
 - **Leaflet** - 2D mapping with heatmap overlays
 - **Plotly.js** - Interactive charts and analytics
 - **React Router** - Client-side routing
+- **Heroicons** - Beautiful icon library
 
-### Backend
-- **Flask** - Python web framework
+### **Backend**
+- **Flask 2.3.3** - Python web framework with RESTful APIs
+- **SGP4** - Satellite orbit propagation algorithms
+- **Skyfield** - Astronomical calculations and celestial mechanics
+- **NumPy & Pandas** - High-performance data processing
+- **Matplotlib & Plotly** - Data visualization and charting
 - **TLE Parser** - Two-Line Element data processing
 - **SQLite** - Local database for caching
 - **CORS** - Cross-origin resource sharing
@@ -49,23 +71,44 @@ OrbitOPS/
 └── README.md
 ```
 
-## 🚀 Quick Start
+## 📦 Installation & Setup
 
-### Backend Setup
+### **Prerequisites**
+- Node.js 18+ and Yarn
+- Python 3.8+
+- Git
+
+### **1. Clone the Repository**
+```bash
+git clone https://github.com/yourusername/orbitops-space-debris-dashboard.git
+cd orbitops-space-debris-dashboard
+```
+
+### **2. Frontend Setup**
+```bash
+cd frontend
+yarn install
+yarn start
+```
+The frontend will run on `http://localhost:3000`
+
+### **3. Backend Setup**
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate  # Windows
+venv\Scripts\activate  # Windows | source venv/bin/activate # macOS/Linux
 pip install -r requirements.txt
 python app.py
 ```
+The backend API will run on `http://localhost:5000`
 
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm start
-```
+## 🎯 Usage
+
+1. **Launch the Application**: Open `http://localhost:3000` in your browser
+2. **Explore 3D View**: Navigate the hyperrealistic Earth and space environment
+3. **Track Debris**: View real-time positions of space debris and satellites
+4. **Analyze Data**: Use the dashboard for statistics and predictions
+5. **Interactive Features**: Click on objects for detailed information
 
 ## 🌟 Key Pages
 
