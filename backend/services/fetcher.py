@@ -221,7 +221,18 @@ class DataFetcher:
             # In production, implement actual API calls to CelesTrak/Space-Track
             if os.path.exists(self.sample_data_file):
                 with open(self.sample_data_file, 'r') as f:
-                    return json.load(f)
+                    data = json.load(f)
+                
+                # Update timestamp to current time to refresh cache
+                data['last_updated'] = datetime.utcnow().isoformat()
+                
+                # Save updated data to cache
+                os.makedirs('data', exist_ok=True)
+                with open(self.cache_file, 'w') as f:
+                    json.dump(data, f, indent=2)
+                
+                print(f"✅ Cache refreshed with sample data at {data['last_updated']}")
+                return data
             else:
                 # Generate new sample data
                 self.initialize_sample_data()

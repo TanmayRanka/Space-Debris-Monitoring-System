@@ -29,6 +29,7 @@ const HyperrealisticGlobe = ({
   const earthRef = useRef(null);
   const cloudsRef = useRef(null);
   const atmosphereRef = useRef(null);
+  const sunRef = useRef(null);
   const satellitesGroupRef = useRef(null);
   const debrisGroupRef = useRef(null);
   const starsRef = useRef(null);
@@ -160,6 +161,9 @@ const HyperrealisticGlobe = ({
 
     // Create starfield
     createStarfield(scene);
+    
+    // Create realistic sun with solar features
+    sunRef.current = createSun(scene);
     
     // Create Earth
     createEarth(scene);
@@ -1369,34 +1373,109 @@ const HyperrealisticGlobe = ({
     earthTexture.wrapS = THREE.RepeatWrapping;
     earthTexture.wrapT = THREE.ClampToEdgeWrapping;
     
-    // Create normal map for surface detail
+    // Create enhanced normal map for surface detail
     const normalCanvas = document.createElement('canvas');
-    normalCanvas.width = 1024;
-    normalCanvas.height = 512;
+    normalCanvas.width = 2048;
+    normalCanvas.height = 1024;
     const normalCtx = normalCanvas.getContext('2d');
     
-    // Generate height-based normal map
-    const imageData = normalCtx.createImageData(1024, 512);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const noise = Math.random() * 0.3 + 0.7;
-      imageData.data[i] = 128 + noise * 50;     // R (X normal)
-      imageData.data[i + 1] = 128 + noise * 50; // G (Y normal)
-      imageData.data[i + 2] = 255;              // B (Z normal)
-      imageData.data[i + 3] = 255;              // A
+    // Generate realistic height-based normal map with terrain features
+    const normalImageData = normalCtx.createImageData(2048, 1024);
+    for (let y = 0; y < 1024; y++) {
+      for (let x = 0; x < 2048; x++) {
+        const i = (y * 2048 + x) * 4;
+        
+        // Create terrain-based height variations
+        const terrainHeight = Math.sin(x * 0.01) * Math.cos(y * 0.01) * 0.5 + 
+                             Math.sin(x * 0.02) * Math.cos(y * 0.02) * 0.3 +
+                             Math.random() * 0.2;
+        
+        // Convert height to normal map values
+        const normalX = 128 + terrainHeight * 60;
+        const normalY = 128 + terrainHeight * 60;
+        const normalZ = 255;
+        
+        normalImageData.data[i] = Math.max(0, Math.min(255, normalX));     // R (X normal)
+        normalImageData.data[i + 1] = Math.max(0, Math.min(255, normalY)); // G (Y normal)
+        normalImageData.data[i + 2] = normalZ;                             // B (Z normal)
+        normalImageData.data[i + 3] = 255;                                 // A
+      }
     }
-    normalCtx.putImageData(imageData, 0, 0);
+    normalCtx.putImageData(normalImageData, 0, 0);
     
     const normalTexture = new THREE.CanvasTexture(normalCanvas);
+    normalTexture.wrapS = THREE.RepeatWrapping;
+    normalTexture.wrapT = THREE.ClampToEdgeWrapping;
     
-    // Enhanced Earth material with realistic properties
+    // Create specular map for water reflection
+    const specularCanvas = document.createElement('canvas');
+    specularCanvas.width = 2048;
+    specularCanvas.height = 1024;
+    const specularCtx = specularCanvas.getContext('2d');
+    
+    // Base specular map (black for land, white for water)
+    specularCtx.fillStyle = '#000000';
+    specularCtx.fillRect(0, 0, 2048, 1024);
+    
+    // Add water areas with high specularity
+    specularCtx.fillStyle = '#ffffff';
+    
+    // Ocean areas (simplified approximation)
+    const oceanAreas = [
+      { x: 0, y: 0, width: 600, height: 1024 },      // Pacific
+      { x: 1400, y: 0, width: 648, height: 1024 },   // Atlantic
+      { x: 1800, y: 600, width: 248, height: 424 },  // Indian Ocean
+      { x: 1024, y: 0, width: 376, height: 200 },    // Arctic Ocean
+      { x: 1024, y: 824, width: 376, height: 200 }   // Antarctic Ocean
+    ];
+    
+    oceanAreas.forEach(ocean => {
+      specularCtx.fillRect(ocean.x, ocean.y, ocean.width, ocean.height);
+    });
+    
+    // Add lakes and rivers with medium specularity
+    specularCtx.fillStyle = '#888888';
+    for (let i = 0; i < 200; i++) {
+      const x = Math.random() * 2048;
+      const y = Math.random() * 1024;
+      const size = Math.random() * 20 + 5;
+      
+      specularCtx.beginPath();
+      specularCtx.arc(x, y, size, 0, Math.PI * 2);
+      specularCtx.fill();
+    }
+    
+    const specularTexture = new THREE.CanvasTexture(specularCanvas);
+    specularTexture.wrapS = THREE.RepeatWrapping;
+    specularTexture.wrapT = THREE.ClampToEdgeWrapping;
+    
+    // Create roughness map (inverse of specular for realistic material behavior)
+    const roughnessCanvas = document.createElement('canvas');
+    roughnessCanvas.width = 2048;
+    roughnessCanvas.height = 1024;
+    const roughnessCtx = roughnessCanvas.getContext('2d');
+    
+    // Invert specular map for roughness (smooth water = low roughness, rough land = high roughness)
+    roughnessCtx.filter = 'invert(1)';
+    roughnessCtx.drawImage(specularCanvas, 0, 0);
+    
+    const roughnessTexture = new THREE.CanvasTexture(roughnessCanvas);
+    roughnessTexture.wrapS = THREE.RepeatWrapping;
+    roughnessTexture.wrapT = THREE.ClampToEdgeWrapping;
+    
+    // Enhanced Earth material with realistic PBR properties
     const earthMaterial = new THREE.MeshStandardMaterial({
       map: earthTexture,
       normalMap: normalTexture,
-      normalScale: new THREE.Vector2(0.3, 0.3),
-      roughness: 0.8,
-      metalness: 0.1,
-      emissive: new THREE.Color(0x112233),
-      emissiveIntensity: 0.1
+      normalScale: new THREE.Vector2(0.5, 0.5),
+      roughnessMap: roughnessTexture,
+      roughness: 0.7,
+      metalnessMap: specularTexture,
+      metalness: 0.0,
+      emissive: new THREE.Color(0x001122),
+      emissiveIntensity: 0.05,
+      transparent: false,
+      side: THREE.FrontSide
     });
     
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
@@ -1406,10 +1485,75 @@ const HyperrealisticGlobe = ({
     scene.add(earth);
   }, []);
 
-  // Create atmosphere glow
+  // Create enhanced atmosphere with realistic scattering
   const createAtmosphere = useCallback((scene) => {
-    const atmosphereGeometry = new THREE.SphereGeometry(1.01, 64, 64);
+    // Main atmosphere layer
+    const atmosphereGeometry = new THREE.SphereGeometry(1.015, 128, 128);
     const atmosphereMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        sunPosition: { value: new THREE.Vector3(10, 2, 5) }
+      },
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        varying vec3 vWorldPosition;
+        
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          vPosition = position;
+          vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float time;
+        uniform vec3 sunPosition;
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        varying vec3 vWorldPosition;
+        
+        void main() {
+          vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+          vec3 sunDirection = normalize(sunPosition);
+          
+          // Fresnel effect for atmospheric rim lighting
+          float fresnel = 1.0 - abs(dot(viewDirection, vNormal));
+          fresnel = pow(fresnel, 2.0);
+          
+          // Rayleigh scattering approximation
+          float sunDot = dot(vNormal, sunDirection);
+          float scattering = max(0.0, sunDot) * 0.8 + 0.2;
+          
+          // Atmospheric color based on sun position and scattering
+          vec3 dayColor = vec3(0.4, 0.7, 1.0);    // Blue sky
+          vec3 sunsetColor = vec3(1.0, 0.6, 0.3); // Orange sunset
+          vec3 nightColor = vec3(0.1, 0.2, 0.4);  // Dark blue night
+          
+          // Mix colors based on sun position
+          float dayFactor = max(0.0, sunDirection.y);
+          vec3 atmosphereColor = mix(nightColor, dayColor, dayFactor);
+          atmosphereColor = mix(atmosphereColor, sunsetColor, (1.0 - dayFactor) * 0.5);
+          
+          // Final intensity calculation
+          float intensity = fresnel * scattering * 0.8;
+          
+          gl_FragColor = vec4(atmosphereColor, intensity);
+        }
+      `,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false
+    });
+    
+    const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+    atmosphereRef.current = atmosphere;
+    scene.add(atmosphere);
+    
+    // Add outer atmosphere glow layer
+    const outerAtmosphereGeometry = new THREE.SphereGeometry(1.03, 64, 64);
+    const outerAtmosphereMaterial = new THREE.ShaderMaterial({
       vertexShader: `
         varying vec3 vNormal;
         void main() {
@@ -1420,18 +1564,25 @@ const HyperrealisticGlobe = ({
       fragmentShader: `
         varying vec3 vNormal;
         void main() {
-          float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-          gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * intensity;
+          float intensity = pow(0.8 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+          vec3 glowColor = vec3(0.2, 0.5, 1.0);
+          gl_FragColor = vec4(glowColor, intensity * 0.3);
         }
       `,
       blending: THREE.AdditiveBlending,
       side: THREE.BackSide,
-      transparent: true
+      transparent: true,
+      depthWrite: false
     });
     
-    const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-    atmosphereRef.current = atmosphere;
-    scene.add(atmosphere);
+    const outerAtmosphere = new THREE.Mesh(outerAtmosphereGeometry, outerAtmosphereMaterial);
+    scene.add(outerAtmosphere);
+    
+    // Store atmosphere references for animation
+    atmosphere.userData = {
+      material: atmosphereMaterial,
+      outerMaterial: outerAtmosphereMaterial
+    };
   }, []);
 
   // Create cloud layer
@@ -1941,6 +2092,59 @@ const HyperrealisticGlobe = ({
             child.material.uniforms.time.value = time;
           }
         });
+      }
+      
+      // Animate sun with realistic solar activity
+      if (sunRef.current) {
+        // Update sun material time for surface animation
+        if (sunRef.current.material && sunRef.current.material.uniforms) {
+          sunRef.current.material.uniforms.time.value = time;
+        }
+        
+        // Animate corona if it exists
+        if (sunRef.current.corona && sunRef.current.corona.material.uniforms) {
+          sunRef.current.corona.material.uniforms.time.value = time;
+        }
+        
+        // Animate lens flare if it exists
+        if (sunRef.current.lensFlare && sunRef.current.lensFlare.material.uniforms) {
+          sunRef.current.lensFlare.material.uniforms.time.value = time;
+        }
+        
+        // Subtle sun rotation
+        sunRef.current.rotation.y += 0.0005;
+        
+        // Update sun light intensity with subtle variation
+        if (sceneRef.current) {
+          const sunLight = sceneRef.current.getObjectByName('sunLight');
+          if (sunLight) {
+            // Subtle intensity variation to simulate solar activity
+            const baseIntensity = 2.5;
+            const variation = Math.sin(time * 0.1) * 0.1;
+            sunLight.intensity = baseIntensity + variation;
+          }
+        }
+      }
+      
+      // Animate atmosphere with dynamic effects
+      if (atmosphereRef.current) {
+        // Update atmosphere material time and sun position
+        if (atmosphereRef.current.material && atmosphereRef.current.material.uniforms) {
+          atmosphereRef.current.material.uniforms.time.value = time;
+          
+          // Update sun position for atmospheric scattering
+          if (sunRef.current) {
+            atmosphereRef.current.material.uniforms.sunPosition.value.copy(sunRef.current.position);
+          }
+        }
+        
+        // Update outer atmosphere if it exists
+        if (atmosphereRef.current.userData && atmosphereRef.current.userData.outerMaterial) {
+          const outerMaterial = atmosphereRef.current.userData.outerMaterial;
+          if (outerMaterial.uniforms && outerMaterial.uniforms.time) {
+            outerMaterial.uniforms.time.value = time;
+          }
+        }
       }
       
 
