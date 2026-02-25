@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  GlobeAltIcon, 
-  CubeIcon, 
+import {
+  GlobeAltIcon,
+  CubeIcon,
   MapIcon,
   EyeIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
-import HyperrealisticGlobe from '../HyperrealisticGlobe';
+import CesiumGlobe from '../CesiumGlobe';
 
 const MapView = ({ mode, objects, isLoading }) => {
   const containerRef = useRef(null);
-  
+
   const [selectedObject, setSelectedObject] = useState(null);
   const [mapLayers, setMapLayers] = useState({
     satellites: true,
@@ -26,23 +26,25 @@ const MapView = ({ mode, objects, isLoading }) => {
   // Generate sample data if no objects provided
   const generateSampleObjects = () => {
     const sampleObjects = [];
-    
+
     // Sample satellites
     for (let i = 0; i < 25; i++) {
       sampleObjects.push({
         id: `sat-${i}`,
-        name: `Satellite ${i + 1}`,
+        name: i === 0 ? "ISS (ZARYA)" : `Satellite ${i + 1}`,
         type: 'satellite',
-        latitude: (Math.random() - 0.5) * 180,
-        longitude: (Math.random() - 0.5) * 360,
-        altitude: 400 + Math.random() * 1000,
-        velocity: 7.5 + Math.random() * 2,
-        status: Math.random() > 0.2 ? 'active' : 'inactive',
+        latitude: 0,
+        longitude: 0,
+        altitude: 400,
+        // Real TLE for ISS (Example)
+        tleLine1: i === 0 ? "1 25544U 98067A   23157.87445517  .00010041  00000+0  18196-3 0  9993" : undefined,
+        tleLine2: i === 0 ? "2 25544  51.6416 358.8475 0005234  80.9577  55.5168 15.49405625399580" : undefined,
+        status: 'active',
         mission: ['Communication', 'Earth Observation', 'Navigation', 'Scientific'][Math.floor(Math.random() * 4)],
         country: ['USA', 'Russia', 'China', 'ESA', 'India'][Math.floor(Math.random() * 5)]
       });
     }
-    
+
     // Sample debris
     for (let i = 0; i < 35; i++) {
       sampleObjects.push({
@@ -58,7 +60,7 @@ const MapView = ({ mode, objects, isLoading }) => {
         trackingConfidence: 60 + Math.random() * 40
       });
     }
-    
+
     return sampleObjects;
   };
 
@@ -125,12 +127,10 @@ const MapView = ({ mode, objects, isLoading }) => {
           transition={{ duration: 0.5 }}
           className="w-full h-full"
         >
-          <HyperrealisticGlobe
+          <CesiumGlobe
             satellites={displayObjects.filter(obj => obj.type === 'satellite')}
             debris={displayObjects.filter(obj => obj.type === 'debris')}
             onObjectSelect={setSelectedObject}
-            className="w-full h-full"
-            showControls={true}
           />
         </motion.div>
       ) : (
@@ -138,7 +138,7 @@ const MapView = ({ mode, objects, isLoading }) => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          ref={containerRef} 
+          ref={containerRef}
           className="w-full h-full bg-gradient-to-br from-dark-primary via-dark-secondary to-dark-primary relative overflow-hidden"
         >
           {/* 2D World Map with Object Visualization */}
@@ -167,7 +167,7 @@ const MapView = ({ mode, objects, isLoading }) => {
                   fill="none"
                 />
               </svg>
-              
+
               {/* Grid Lines */}
               <div className="absolute inset-0">
                 {[...Array(10)].map((_, i) => (
@@ -192,7 +192,7 @@ const MapView = ({ mode, objects, isLoading }) => {
               {displayObjects.slice(0, 50).map((obj, index) => {
                 const x = (obj.longitude + 180) / 360 * 100;
                 const y = (90 - obj.latitude) / 180 * 100;
-                
+
                 return (
                   <motion.div
                     key={obj.id || index}
@@ -203,14 +203,12 @@ const MapView = ({ mode, objects, isLoading }) => {
                     style={{ left: `${x}%`, top: `${y}%` }}
                     onClick={() => setSelectedObject(obj)}
                   >
-                    <div className={`w-2 h-2 rounded-full ${
-                      obj.type === 'satellite' ? 'bg-neon-blue' : 'bg-red-400'
-                    } shadow-lg group-hover:scale-150 transition-transform duration-200`}>
-                      <div className={`absolute inset-0 rounded-full animate-ping ${
-                        obj.type === 'satellite' ? 'bg-neon-blue' : 'bg-red-400'
-                      } opacity-75`} />
+                    <div className={`w-2 h-2 rounded-full ${obj.type === 'satellite' ? 'bg-neon-blue' : 'bg-red-400'
+                      } shadow-lg group-hover:scale-150 transition-transform duration-200`}>
+                      <div className={`absolute inset-0 rounded-full animate-ping ${obj.type === 'satellite' ? 'bg-neon-blue' : 'bg-red-400'
+                        } opacity-75`} />
                     </div>
-                    
+
                     {/* Tooltip */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-dark-lighter/90 backdrop-blur-sm text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                       {obj.name || `${obj.type} ${index + 1}`}
@@ -275,7 +273,7 @@ const MapView = ({ mode, objects, isLoading }) => {
           {/* Layer Controls */}
           <div className="glass-card p-3 space-y-2">
             <h4 className="text-sm font-medium text-white mb-2">Layers</h4>
-            
+
             <label className="flex items-center space-x-2 text-sm">
               <input
                 type="checkbox"
@@ -285,7 +283,7 @@ const MapView = ({ mode, objects, isLoading }) => {
               />
               <span className="text-gray-300">Satellites ({getObjectCount('satellite')})</span>
             </label>
-            
+
             <label className="flex items-center space-x-2 text-sm">
               <input
                 type="checkbox"
@@ -295,7 +293,7 @@ const MapView = ({ mode, objects, isLoading }) => {
               />
               <span className="text-gray-300">Debris ({getObjectCount('debris')})</span>
             </label>
-            
+
             <label className="flex items-center space-x-2 text-sm">
               <input
                 type="checkbox"
@@ -305,9 +303,9 @@ const MapView = ({ mode, objects, isLoading }) => {
               />
               <span className="text-gray-300">Rockets ({getObjectCount('rocket')})</span>
             </label>
-            
+
             <hr className="border-gray-600" />
-            
+
             <label className="flex items-center space-x-2 text-sm">
               <input
                 type="checkbox"
@@ -317,7 +315,7 @@ const MapView = ({ mode, objects, isLoading }) => {
               />
               <span className="text-gray-300">Orbit Paths</span>
             </label>
-            
+
             <label className="flex items-center space-x-2 text-sm">
               <input
                 type="checkbox"
@@ -374,7 +372,7 @@ const MapView = ({ mode, objects, isLoading }) => {
                 ×
               </button>
             </div>
-            
+
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-400">Type:</span>
@@ -386,12 +384,11 @@ const MapView = ({ mode, objects, isLoading }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Risk Level:</span>
-                <span className={`px-2 py-1 rounded text-xs ${
-                  selectedObject.risk === 'critical' ? 'bg-red-500/20 text-red-400' :
+                <span className={`px-2 py-1 rounded text-xs ${selectedObject.risk === 'critical' ? 'bg-red-500/20 text-red-400' :
                   selectedObject.risk === 'high' ? 'bg-orange-500/20 text-orange-400' :
-                  selectedObject.risk === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-green-500/20 text-green-400'
-                }`}>
+                    selectedObject.risk === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-green-500/20 text-green-400'
+                  }`}>
                   {selectedObject.risk?.toUpperCase() || 'UNKNOWN'}
                 </span>
               </div>
@@ -400,7 +397,7 @@ const MapView = ({ mode, objects, isLoading }) => {
                 <span className="text-white">{selectedObject.operator || 'Unknown'}</span>
               </div>
             </div>
-            
+
             <div className="mt-4 pt-3 border-t border-gray-600">
               <button className="neon-button w-full py-2 text-sm">
                 View Details

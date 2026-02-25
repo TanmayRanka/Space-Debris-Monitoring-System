@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobeAltIcon } from '@heroicons/react/24/outline';
-import HyperrealisticGlobe from './HyperrealisticGlobe';
+import CesiumGlobe from './CesiumGlobe';
 
 const Globe3D = ({
   satellites = [],
@@ -85,7 +85,7 @@ const Globe3D = ({
 
   if (mode === "2d") {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -98,12 +98,12 @@ const Globe3D = ({
             <div className="absolute inset-0 opacity-20">
               <svg viewBox="0 0 1000 500" className="w-full h-full">
                 {/* Simplified world continents */}
-                <path d="M150,200 Q200,180 250,200 L300,220 Q350,200 400,210 L450,200 Q500,190 550,200 L600,210 Q650,200 700,205 L750,200 Q800,195 850,200" 
-                      stroke="rgba(59, 130, 246, 0.3)" strokeWidth="2" fill="none" />
-                <path d="M100,250 Q150,230 200,250 L250,270 Q300,250 350,260 L400,250 Q450,240 500,250 L550,260 Q600,250 650,255 L700,250 Q750,245 800,250" 
-                      stroke="rgba(59, 130, 246, 0.3)" strokeWidth="2" fill="none" />
-                <path d="M200,300 Q250,280 300,300 L350,320 Q400,300 450,310 L500,300 Q550,290 600,300 L650,310 Q700,300 750,305" 
-                      stroke="rgba(59, 130, 246, 0.3)" strokeWidth="2" fill="none" />
+                <path d="M150,200 Q200,180 250,200 L300,220 Q350,200 400,210 L450,200 Q500,190 550,200 L600,210 Q650,200 700,205 L750,200 Q800,195 850,200"
+                  stroke="rgba(59, 130, 246, 0.3)" strokeWidth="2" fill="none" />
+                <path d="M100,250 Q150,230 200,250 L250,270 Q300,250 350,260 L400,250 Q450,240 500,250 L550,260 Q600,250 650,255 L700,250 Q750,245 800,250"
+                  stroke="rgba(59, 130, 246, 0.3)" strokeWidth="2" fill="none" />
+                <path d="M200,300 Q250,280 300,300 L350,320 Q400,300 450,310 L500,300 Q550,290 600,300 L650,310 Q700,300 750,305"
+                  stroke="rgba(59, 130, 246, 0.3)" strokeWidth="2" fill="none" />
               </svg>
             </div>
 
@@ -186,7 +186,7 @@ const Globe3D = ({
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, delay: 0.1 }}
@@ -232,15 +232,13 @@ const Globe3D = ({
         )}
 
         {/* Globe Component */}
-        <HyperrealisticGlobe
-          ref={globeRef}
-          satellites={displaySatellites}
-          debris={displayDebris}
-          onObjectSelect={onObjectSelect}
-          className="w-full h-full"
-          showControls={showControls}
-          settings={defaultSettings}
-        />
+        <div className="w-full h-full">
+          <CesiumGlobe
+            satellites={displaySatellites}
+            debris={displayDebris}
+            onObjectSelect={onObjectSelect}
+          />
+        </div>
 
         {/* Globe Status Indicator */}
         <div className="absolute bottom-4 left-4 glass-card p-3 z-40">
